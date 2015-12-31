@@ -390,12 +390,12 @@ class Board():
 
 		if self._level == "expert":
 			occ_edges = []
-			corners = [1,3,5,9]
+			corners = [1,3,7,9]
 			edges = [2,4,6,8]
-			if len(self._crosses) == 2:
-				for edge in edges:
+			for edge in edges:
 						if self.is_occupied(edge):
 							occ_edges.append(edge)
+			if len(self._crosses) == 2:
 				if (self._crosses[0] != (200,200) and 
 						len(occ_edges) != 0):
 					if len(occ_edges) == 0:
@@ -413,7 +413,6 @@ class Board():
 							edges[2] in occ_edges)):
 							return self.get_pos(1)
 						else:
-							print occ_edges
 							if edges[0] in occ_edges:
 								return self.get_pos(1)
 							elif edges[3] in occ_edges:
@@ -422,12 +421,20 @@ class Board():
 				else:
 					free_edges = list(set(edges) - set(occ_edges))
 					return self.get_pos(free_edges[0])
-			# if (len(self._crosses) == 3 and 
-			# 	len(occ_edges) == 3)
-			# 	self.get_pos_no(self._crosses[0]) in corners):
-			# 	for edge in edges:
-			# 			if self.is_occupied(edge):
-			# 				occ_edges.append(edge)
+			if (len(self._crosses) == 3 and 
+				len(occ_edges) == 3 and
+				self.get_pos_no(self._crosses[0]) in corners):
+				for corner in corners:
+						if self.is_occupied(corner):
+							occ_corner = corner
+				if occ_corner == corners[0]:
+					return self.get_pos(corners[3])
+				if occ_corner == corners[3]:
+					return self.get_pos(corners[0])
+				if occ_corner == corners[1]:
+					return self.get_pos(corners[2])
+				if occ_corner == corners[2]:
+					return self.get_pos(corners[1])
 
 
 		return self.get_pos(self.get_rand_play())
