@@ -2,7 +2,7 @@ import sys, copy, pygame
 import numpy.random as rand
 
 class Board():
-	def __init__(self, side, UI = True):
+	def __init__(self, side, UI = True, level = "undetermined"):
 		self._end_game = False
 		#pygame.mixer.pre_init(44100, -16, 1, 512)
 		#pygame.mixer.init(44100, -16, 1, 512)
@@ -25,11 +25,37 @@ class Board():
 		self._play_again = self._font.render(" Play Again ", 1, (0,0,0), (192,192,192))
 		self._play_again_rect = self._play_again.get_rect()
 		self._play_again_rect.centerx = 300
-		self._play_again_rect.centery = 250
+		self._play_again_rect.centery = 200
+		self._diff = self._font.render(" Choose Difficulty ", 1, (0,0,0), (192,192,192))
+		self._diff_rect = self._diff.get_rect()
+		self._diff_rect.centerx = 300
+		self._diff_rect.centery = 300
 		self._quit = self._font.render(" Quit ", 1, (0,0,0), (192,192,192))
 		self._quit_rect = self._quit.get_rect()
 		self._quit_rect.centerx = 300
-		self._quit_rect.centery = 350
+		self._quit_rect.centery = 400
+
+		self._level = level
+		if self._level == "undetermined" and UI:
+			self._choose_diff = pygame.Surface(self._size)
+			self._choose_diff.fill((128, 128, 128))
+			self._choose_diff.set_alpha(170)
+			self._easy = self._font.render(" Easy ", 1, (0,0,0), (192,192,192))
+			self._easy_rect = self._easy.get_rect()
+			self._easy_rect.centerx = 300
+			self._easy_rect.centery = 120
+			self._intermediate = self._font.render(" Intermediate ", 1, (0,0,0), (192,192,192))
+			self._intermediate_rect = self._intermediate.get_rect()
+			self._intermediate_rect.centerx = 300
+			self._intermediate_rect.centery = 240
+			self._advanced = self._font.render(" Advanced ", 1, (0,0,0), (192,192,192))
+			self._advanced_rect = self._advanced.get_rect()
+			self._advanced_rect.centerx = 300
+			self._advanced_rect.centery = 360
+			self._expert = self._font.render(" Expert ", 1, (0,0,0), (192,192,192))
+			self._expert_rect = self._expert.get_rect()
+			self._expert_rect.centerx = 300
+			self._expert_rect.centery = 480
 
 		self._scale = side/3
 		pos1, pos2 = self._scale, 2*self._scale
@@ -54,6 +80,12 @@ class Board():
 		self._red_circle = pygame.image.load("./images/red_circle.bmp").convert()
 		for pos in self._positions:
 			self._screen.blit(self._cell, pos)
+		if level == "undetermined" and UI:
+			self._screen.blit(self._choose_diff, (0,0))
+			self._screen.blit(self._easy, self._easy_rect)
+			self._screen.blit(self._intermediate, self._intermediate_rect)
+			self._screen.blit(self._advanced, self._advanced_rect)
+			self._screen.blit(self._expert, self._expert_rect)
 		if UI:
 			pygame.display.flip()
 		self._UI = UI
@@ -61,6 +93,10 @@ class Board():
 		self._occupied = []
 		self._circles = []
 		self._crosses = []
+	def draw_empty(self):
+		for pos in self._positions:
+			self._screen.blit(self._cell, pos)
+		pygame.display.flip()
 
 	def get_pos(self, pos_no):
 		if pos_no < 1 or pos_no > 9:
@@ -116,6 +152,7 @@ class Board():
 				self._tie_sound.play()
 			self._screen.blit(self._win_screen, (0,0))
 			self._screen.blit(self._play_again, self._play_again_rect)
+			self._screen.blit(self._diff, self._diff_rect)
 			self._screen.blit(self._quit, self._quit_rect)
 
 		pygame.display.flip()
@@ -137,7 +174,7 @@ class Board():
 		else:
 			return False
 
-	def get_rand_pos(self):
+	def get_rand_play(self):
 		pos = rand.uniform(0, self._side, 2)
 		pos_no = self.get_mouse_pos(pos)
 		loop = True
@@ -290,19 +327,26 @@ class Board():
 		else:
 			return tiemakers[0][0]
 
-	def get_ok_play(self):
+	def get_good_play(self):
 		occ_pos = copy.deepcopy(self._occupied)
 		circles = copy.deepcopy(self._circles)
 		crosses = copy.deepcopy(self._crosses)
+
+		if self._level == "advanced" or self._level == "expert":
+			if (self._crosses[0] == (200, 200) and 
+					len(self._crosses) == 1):
+				return (0,0)
+			if (self._crosses[0][0] != 200 and 
+				self._crosses[0][1] != 200 and
+					len(self._crosses) == 1):
+				return (200,200)
 
 		possible_pos = list(set(self._positions) - set(occ_pos))
 		for pos in possible_pos:
 			occ_pos = copy.deepcopy(self._occupied)
 			circles = copy.deepcopy(self._circles)
 			crosses = copy.deepcopy(self._crosses)
-
 			
-				
 			occ_pos.append(pos)
 			circles.append(pos)
 			test_board = Board(600, False)
@@ -342,24 +386,49 @@ class Board():
 				if (test_board._end_game and
 					test_board._win_type == "tie"):
 					return circles[-1]
-		if (self._crosses[0] == (200, 200) and 
-				len(self._crosses) == 1):
-			return (0,0)
-		if (self._crosses[0][0] != 200 and 
-			self._crosses[0][1] != 200 and
-				len(self._crosses) == 1):
-			return (200,200)
-		return self.get_pos(self.get_rand_pos())
+		
+		return self.get_pos(self.get_rand_play())
+
+	def get_play(self):
+		if self._level == "easy":
+			return self.get_pos(self.get_rand_play())
+		if (self._level == "intermediate" or
+			self._level == "advanced" or
+			self._level == "expert"):
+			return self.get_good_play()
 
 
 
-def tictactoe_game():
-	tictac = Board(600)
+def tictactoe_game(level):
+	level = level
+	choose_diff = False
+	tictac = Board(600, True, level)
+	while level == "undetermined":
+		for event in pygame.event.get():
+			if event.type == pygame.MOUSEBUTTONUP:
+				mouse_click = pygame.mouse.get_pos()
+				if tictac._easy_rect.collidepoint(mouse_click):
+					tictac._level = "easy"
+					level = "easy"
+					tictac.draw_empty()
+				if tictac._intermediate_rect.collidepoint(mouse_click):
+					tictac._level = "intermediate"
+					level = "intermediate"
+					tictac.draw_empty()
+				if tictac._advanced_rect.collidepoint(mouse_click):
+					tictac._level = "advanced"
+					level = "advanced"
+					tictac.draw_empty()
+				if tictac._expert_rect.collidepoint(mouse_click):
+					tictac._level = "expert"
+					level = "expert"
+					tictac.draw_empty()
+
+
 	while not tictac._end_game:
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT: sys.exit()
 
-			#if pygame.mouse.get_pressed()[0] == 0:
 			if event.type == pygame.MOUSEBUTTONUP:	
 				mouse_click = pygame.mouse.get_pos()
 				mouse_pos = tictac.get_mouse_pos(mouse_click)
@@ -367,7 +436,7 @@ def tictactoe_game():
 					tictac.add_move(mouse_pos, "x")
 					tictac.draw_board_state()
 					if not tictac._end_game:
-						next_pos = tictac.get_ok_play()
+						next_pos = tictac.get_play()
 						next_pos_no = tictac.get_pos_no(next_pos)
 						tictac.add_move(next_pos_no, "o")
 						tictac.draw_board_state()
@@ -379,15 +448,23 @@ def tictactoe_game():
 					tictac._end_decision = False
 				if tictac._quit_rect.collidepoint(mouse_click):
 					tictac._end_decision = True
-	return tictac._end_decision
+				if tictac._diff_rect.collidepoint(mouse_click):
+					tictac._end_decision = False
+					choose_diff = True
+	return tictac._end_decision, tictac._level, choose_diff
 
 def tictactoe():
+	level = "undetermined"
 	pygame.mixer.pre_init(44100, -16, 1, 512)
 	pygame.mixer.init(44100, -16, 1, 512)
 	bgmusic = pygame.mixer.Sound("./sounds/bgmusic.wav")		
 	bgmusic.play(-1)
 	while 1:
-		if tictactoe_game():
+		exit, lvl, diff = tictactoe_game(level)
+		level = lvl
+		if diff:
+			level = "undetermined"
+		if exit:
 			sys.exit()
 
 tictactoe()
