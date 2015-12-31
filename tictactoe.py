@@ -333,13 +333,14 @@ class Board():
 		crosses = copy.deepcopy(self._crosses)
 
 		if self._level == "advanced" or self._level == "expert":
-			if (self._crosses[0] == (200, 200) and 
-					len(self._crosses) == 1):
-				return (0,0)
-			if (self._crosses[0][0] != 200 and 
-				self._crosses[0][1] != 200 and
-					len(self._crosses) == 1):
-				return (200,200)
+			if len(self._crosses) == 1:
+				if self._crosses[0] == (200, 200):
+					return (0,0)
+				else:
+					return (200,200)
+
+		
+
 
 		possible_pos = list(set(self._positions) - set(occ_pos))
 		for pos in possible_pos:
@@ -386,7 +387,49 @@ class Board():
 				if (test_board._end_game and
 					test_board._win_type == "tie"):
 					return circles[-1]
-		
+
+		if self._level == "expert":
+			occ_edges = []
+			corners = [1,3,5,9]
+			edges = [2,4,6,8]
+			if len(self._crosses) == 2:
+				for edge in edges:
+						if self.is_occupied(edge):
+							occ_edges.append(edge)
+				if (self._crosses[0] != (200,200) and 
+						len(occ_edges) != 0):
+					if len(occ_edges) == 0:
+						return self.get_pos(edge[0])
+					if len(occ_edges) == 1:
+						if (edges[0] in occ_edges 
+							or edges[3] in occ_edges):
+							return self.get_pos(edges[1])
+						else:
+							return self.get_pos(edges[0])
+					if len(occ_edges) == 2:
+						if ((edges[0] in occ_edges and
+							edges[3] in occ_edges) or
+							(edges[1] in occ_edges and
+							edges[2] in occ_edges)):
+							return self.get_pos(1)
+						else:
+							print occ_edges
+							if edges[0] in occ_edges:
+								return self.get_pos(1)
+							elif edges[3] in occ_edges:
+								return self.get_pos(9)
+
+				else:
+					free_edges = list(set(edges) - set(occ_edges))
+					return self.get_pos(free_edges[0])
+			# if (len(self._crosses) == 3 and 
+			# 	len(occ_edges) == 3)
+			# 	self.get_pos_no(self._crosses[0]) in corners):
+			# 	for edge in edges:
+			# 			if self.is_occupied(edge):
+			# 				occ_edges.append(edge)
+
+
 		return self.get_pos(self.get_rand_play())
 
 	def get_play(self):
