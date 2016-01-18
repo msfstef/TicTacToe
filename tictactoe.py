@@ -1,5 +1,5 @@
-import sys, copy, pygame
-import numpy.random as rand
+import sys, copy, random 
+import pygame
 
 class Board():
 	def __init__(self, side, UI = True, level = "undetermined"):
@@ -175,7 +175,7 @@ class Board():
 			return False
 
 	def get_rand_play(self):
-		pos = rand.uniform(0, self._side, 2)
+		pos = (random.uniform(0, self._side), random.uniform(0, self._side))
 		pos_no = self.get_mouse_pos(pos)
 		loop = True
 		while loop:
@@ -183,7 +183,7 @@ class Board():
 			if self.is_occupied(pos_no) or not pos_no:
 				randomize = True
 			if randomize:
-				pos = rand.uniform(0, self._side, 2)
+				pos = (random.uniform(0, self._side), random.uniform(0, self._side)))
 				pos_no = self.get_mouse_pos(pos)
 			else:
 				loop = False
